@@ -1,35 +1,27 @@
-# Build stage
-FROM golang:1.22-alpine AS builder
+# Используем официальный образ с Go
+FROM golang:1.22 as builder
 
-# Set working directory
+# Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
 
-# Copy go.mod and go.sum files
-COPY go.mod go.sum ./
+# Копируем только go.mod и go.sum для восстановления модулей
+COPY go.mod .
+COPY go.sum .
 
-# Download dependencies
+# Скачиваем зависимости
 RUN go mod download
 
-# Copy the source code
+# Копируем весь исходный код
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o smarthome
+# Собираем бинарник
+RUN CGO_ENABLED=0 GOOS=linux go build -o /smarthome
 
-# Runtime stage
-FROM alpine:latest
+# Финальный образ без Go
+FROM gcr.io/distroless/base-debian12
 
-# Install necessary runtime dependencies
-RUN apk --no-cache add ca-certificates tzdata
+# Копируем бинарник из builder
+COPY --from=builder /smarthome /smarthome
 
-# Set working directory
-WORKDIR /app
-
-# Copy the binary from the builder stage
-COPY --from=builder /app/smarthome .
-
-# Expose the port the app runs on
-EXPOSE 8080
-
-# Command to run the application
-CMD ["./smarthome"]
+# Запускаем приложение
+CMD ["/smarthome"]

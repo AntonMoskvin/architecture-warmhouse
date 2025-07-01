@@ -1,0 +1,254 @@
+openapi: 3.0.3
+info:
+  title: SmartHome API
+  description: RESTful API для управления датчиками умного дома
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local server
+
+tags:
+  - name: sensors
+    description: Операции с датчиками
+
+paths:
+  /sensors:
+    get:
+      tags:
+        - sensors
+      summary: Получить все датчики
+      responses:
+        '200':
+          description: Список датчиков
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sensor'
+    post:
+      tags:
+        - sensors
+      summary: Создать новый датчик
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorCreate'
+      responses:
+        '201':
+          description: Успешное создание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+
+  /sensors/{id}:
+    get:
+      tags:
+        - sensors
+      summary: Получить датчик по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Информация о датчике
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+        '404':
+          description: Датчик не найден
+    put:
+      tags:
+        - sensors
+      summary: Обновить датчик
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorUpdate'
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+    delete:
+      tags:
+        - sensors
+      summary: Удалить датчик
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешное удаление
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                example:
+                  message: "Sensor deleted successfully"
+    patch:
+      tags:
+        - sensors
+      summary: Обновить значение датчика
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value:
+                  type: number
+                status:
+                  type: string
+              required:
+                - value
+                - status
+      responses:
+        '200':
+          description: Значение обновлено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                example:
+                  message: "Sensor value updated successfully"
+
+  /sensors/temperature/{location}:
+    get:
+      tags:
+        - sensors
+      summary: Получить температуру по локации
+      parameters:
+        - name: location
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Температурные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemperatureResponse'
+        '500':
+          description: Ошибка получения данных
+
+components:
+  schemas:
+    SensorType:
+      type: string
+      enum:
+        - temperature
+
+    Sensor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SensorType'
+        location:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        status:
+          type: string
+        last_updated:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    SensorCreate:
+      type: object
+      required:
+        - name
+        - type
+        - location
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SensorType'
+        location:
+          type: string
+        unit:
+          type: string
+
+    SensorUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SensorType'
+        location:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        status:
+          type: string
+
+    TemperatureResponse:
+      type: object
+      properties:
+        location:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        status:
+          type: string
+        sensor_id:
+          type: string
+        sensor_type:
+          type: string
+        description:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
